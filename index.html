@@ -606,6 +606,25 @@
   </div>
 </div>
 
+<!-- Edit Card Modal -->
+<div class="modal-overlay hidden" id="editCardModal" onclick="closeEditCardModalOnBg(event)">
+  <div class="modal">
+    <h3>Edit Card</h3>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Question</label>
+      <input type="text" id="editCardQuestion" placeholder="Question…" onkeydown="if(event.key==='Enter')confirmEditCard()">
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Answer</label>
+      <input type="text" id="editCardAnswer" placeholder="Answer…" onkeydown="if(event.key==='Enter')confirmEditCard()">
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeEditCardModal()">Cancel</button>
+      <button class="btn primary" onclick="confirmEditCard()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Rename Deck Modal -->
 <div class="modal-overlay hidden" id="renameDeckModal" onclick="closeRenameDeckModalOnBg(event)">
   <div class="modal">
@@ -929,15 +948,70 @@
     deck.cards.forEach(card => {
       const el = document.createElement('div');
       el.className = 'card-preview';
-      el.innerHTML = `
-        <button class="delete-card-btn" title="Delete">×</button>
-        <div class="card-preview-q">${esc(card.q)}</div>
-        <div class="card-preview-a">${esc(card.a)}</div>
-      `;
-      el.querySelector('.delete-card-btn').addEventListener('click', () => deleteCard(card.id));
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'delete-card-btn';
+      editBtn.title = 'Edit';
+      editBtn.textContent = '✎';
+      editBtn.style.cssText = 'position:absolute;top:8px;right:36px;font-size:0.75rem;color:var(--muted);opacity:0;transition:opacity 0.15s;';
+      editBtn.addEventListener('click', () => openEditCardModal(card.id));
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-card-btn';
+      delBtn.title = 'Delete';
+      delBtn.textContent = '×';
+      delBtn.style.cssText = 'position:absolute;top:8px;right:8px;opacity:0;transition:opacity 0.15s;';
+      delBtn.addEventListener('click', () => deleteCard(card.id));
+
+      const q = document.createElement('div');
+      q.className = 'card-preview-q';
+      q.textContent = card.q;
+
+      const a = document.createElement('div');
+      a.className = 'card-preview-a';
+      a.textContent = card.a;
+
+      el.appendChild(editBtn);
+      el.appendChild(delBtn);
+      el.appendChild(q);
+      el.appendChild(a);
+
+      el.addEventListener('mouseenter', () => { editBtn.style.opacity = '1'; delBtn.style.opacity = '1'; });
+      el.addEventListener('mouseleave', () => { editBtn.style.opacity = '0'; delBtn.style.opacity = '0'; });
+
       grid.appendChild(el);
     });
     renderDeckList();
+  }
+
+  function openEditCardModal(cardId) {
+    const deck = activeDeck();
+    const card = deck.cards.find(c => c.id === cardId);
+    if (!card) return;
+    document.getElementById('editCardQuestion').value = card.q;
+    document.getElementById('editCardAnswer').value = card.a;
+    document.getElementById('editCardModal').dataset.cardId = cardId;
+    document.getElementById('editCardModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('editCardQuestion').focus(), 50);
+  }
+
+  function confirmEditCard() {
+    const q = document.getElementById('editCardQuestion').value.trim();
+    const a = document.getElementById('editCardAnswer').value.trim();
+    if (!q || !a) return;
+    const cardId = parseInt(document.getElementById('editCardModal').dataset.cardId);
+    const deck = activeDeck();
+    const card = deck.cards.find(c => c.id === cardId);
+    if (card) { card.q = q; card.a = a; save(); renderManageView(); }
+    closeEditCardModal();
+  }
+
+  function closeEditCardModal() {
+    document.getElementById('editCardModal').classList.add('hidden');
+  }
+
+  function closeEditCardModalOnBg(e) {
+    if (e.target === document.getElementById('editCardModal')) closeEditCardModal();
   }
 
   // ─── MODAL ───────────────────────────────────────────────
