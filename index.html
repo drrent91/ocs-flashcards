@@ -467,6 +467,7 @@
 <header>
   <h1>Flashcards</h1>
   <span>Study anything</span>
+  <button class="btn" onclick="openAboutModal()" style="margin-left:auto;font-size:0.68rem;">About</button>
 </header>
 
 <div class="app">
@@ -633,6 +634,42 @@
     <div class="modal-btns">
       <button class="btn" onclick="closeRenameDeckModal()">Cancel</button>
       <button class="btn primary" onclick="confirmRenameDeck()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- About Modal -->
+<div class="modal-overlay hidden" id="aboutModal" onclick="closeAboutModalOnBg(event)">
+  <div class="modal" style="width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+    <h3 style="margin-bottom:6px;">OCS Flashcards</h3>
+    <div style="width:40px;height:2px;background:var(--rust);margin-bottom:20px;"></div>
+    <div style="font-size:0.82rem;line-height:1.85;color:var(--ink);display:flex;flex-direction:column;gap:14px;">
+
+      <p>Flashcards have always been my favorite way to study. I created this web application in order to study for OCS while spending time on the computer.</p>
+
+      <p>Feel free to add your own flashcard decks. I have added some decks I feel are important, but as they say — two minds are better than one.</p>
+
+      <p>If you have any ideas, please create a new deck instead of adding on to another person's deck. This creates an environment in which we can learn from each other.</p>
+
+      <div style="background:var(--cream);border:1px solid var(--border);padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:500;">How to use</div>
+
+        <p><strong>+ New Deck</strong> — Create a deck. Include your name as <em>(OC XXXXX)</em> so the team knows who contributed. Click the pencil icon to rename the deck.</p>
+
+        <p><strong>Manage</strong> — Add cards. Fill in a question and answer, then click Add. Repeat as many times as you like. Click the pencil icon to edit current flashcards.</p>
+
+        <p><strong>Test</strong> — Test yourself. Note: your answer must match exactly.</p>
+
+        <p><strong>Study</strong> — Flip through cards one at a time. Shuffle anytime.</p>
+      </div>
+
+      <p>Please DM me on WhatsApp if you catch any bugs or have ideas to improve the app.</p>
+
+      <p>I hope this helps each member of the team become a satisfactory Officer Candidate so that each of us may graduate.</p>
+
+    </div>
+    <div class="modal-btns" style="margin-top:20px;">
+      <button class="btn primary" onclick="closeAboutModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1058,6 +1095,16 @@
 
   function closeRenameDeckModalOnBg(e) {
     if (e.target === document.getElementById('renameDeckModal')) closeRenameDeckModal();
+  }
+
+  function openAboutModal() {
+    document.getElementById('aboutModal').classList.remove('hidden');
+  }
+  function closeAboutModal() {
+    document.getElementById('aboutModal').classList.add('hidden');
+  }
+  function closeAboutModalOnBg(e) {
+    if (e.target === document.getElementById('aboutModal')) closeAboutModal();
   }
 
   // ─── UTILS ───────────────────────────────────────────────
