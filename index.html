@@ -606,6 +606,18 @@
   </div>
 </div>
 
+<!-- Rename Deck Modal -->
+<div class="modal-overlay hidden" id="renameDeckModal" onclick="closeRenameDeckModalOnBg(event)">
+  <div class="modal">
+    <h3>Rename Deck</h3>
+    <input type="text" id="renameDeckInput" placeholder="New name…" onkeydown="if(event.key==='Enter')confirmRenameDeck()">
+    <div class="modal-btns">
+      <button class="btn" onclick="closeRenameDeckModal()">Cancel</button>
+      <button class="btn primary" onclick="confirmRenameDeck()">Rename</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ─── STATE ───────────────────────────────────────────────
   let state = {
@@ -890,14 +902,16 @@
         <span class="deck-name">${esc(deck.name)}</span>
         <span style="display:flex;align-items:center;gap:4px;">
           <span class="deck-count">${deck.cards.length}</span>
-          <button class="delete-deck-btn" title="Delete deck">×</button>
+          <button class="delete-deck-btn" title="Rename deck" style="font-size:0.7rem;letter-spacing:0.05em;">✎</button>
+          <button class="delete-deck-btn delete-btn-x" title="Delete deck">×</button>
         </span>
       `;
       item.querySelector('.deck-item, .deck-name, .deck-count').addEventListener?.('click', () => selectDeck(deck.id));
       item.addEventListener('click', (e) => {
         if (!e.target.classList.contains('delete-deck-btn')) selectDeck(deck.id);
       });
-      item.querySelector('.delete-deck-btn').addEventListener('click', (e) => deleteDeck(deck.id, e));
+      item.querySelectorAll('.delete-deck-btn')[0].addEventListener('click', (e) => { e.stopPropagation(); openRenameDeckModal(deck.id); });
+      item.querySelectorAll('.delete-deck-btn')[1].addEventListener('click', (e) => deleteDeck(deck.id, e));
       list.appendChild(item);
     });
   }
@@ -939,6 +953,37 @@
 
   function closeModalOnBg(e) {
     if (e.target === document.getElementById('newDeckModal')) closeModal();
+  }
+
+  function openRenameDeckModal(id) {
+    const deck = state.decks.find(d => d.id === id);
+    if (!deck) return;
+    document.getElementById('renameDeckInput').value = deck.name;
+    document.getElementById('renameDeckModal').dataset.deckId = id;
+    document.getElementById('renameDeckModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('renameDeckInput').select(), 50);
+  }
+
+  function confirmRenameDeck() {
+    const name = document.getElementById('renameDeckInput').value.trim();
+    if (!name) return;
+    const id = parseInt(document.getElementById('renameDeckModal').dataset.deckId);
+    const deck = state.decks.find(d => d.id === id);
+    if (deck) {
+      deck.name = name;
+      save();
+      renderDeckList();
+      if (state.activeDeckId === id) document.getElementById('deckTitleDisplay').textContent = name;
+    }
+    closeRenameDeckModal();
+  }
+
+  function closeRenameDeckModal() {
+    document.getElementById('renameDeckModal').classList.add('hidden');
+  }
+
+  function closeRenameDeckModalOnBg(e) {
+    if (e.target === document.getElementById('renameDeckModal')) closeRenameDeckModal();
   }
 
   // ─── UTILS ───────────────────────────────────────────────
