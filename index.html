@@ -487,9 +487,7 @@
           <button class="btn" id="manageBtn" onclick="showView('manage')">Manage</button>
           <button class="btn" id="testBtn" onclick="showView('test')">Test</button>
           <button class="btn primary" id="studyBtn" onclick="showView('study')">Study</button>
-          <button class="btn" onclick="exportDecks()">Export</button>
-          <button class="btn" onclick="triggerImport()">Import</button>
-          <input type="file" id="importFile" accept="application/json,.json" class="hidden" onchange="importDecks(event)">
+          
         </div>
       </div>
 
@@ -660,13 +658,13 @@
   };
 
   const firebaseConfig = {
-  apiKey: "AIzaSyAy7eeFNdtWHguDyMz2b1tMBrir4ABE90o",
-  authDomain: "ocs-flashcards.firebaseapp.com",
-  projectId: "ocs-flashcards",
-  storageBucket: "ocs-flashcards.firebasestorage.app",
-  messagingSenderId: "712182276601",
-  appId: "1:712182276601:web:51fbadeca037bd0d515d28"
-};
+    apiKey: 'YOUR_FIREBASE_API_KEY',
+    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_PROJECT_ID.firebasestorage.app',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    appId: 'YOUR_APP_ID'
+  };
 
   const cloudSync = {
     enabled: false,
