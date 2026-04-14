@@ -648,6 +648,8 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore-compat.js"></script>
 <script>
   let state = {
     decks: [],
@@ -657,14 +659,37 @@
     studyOrder: [],
   };
 
+  const firebaseConfig = {
+    apiKey: 'YOUR_FIREBASE_API_KEY',
+    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_PROJECT_ID.firebasestorage.app',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    appId: 'YOUR_APP_ID'
+  };
+
+  const cloudSync = {
+    enabled: false,
+    db: null,
+    docRef: null,
+    unsubscribe: null,
+    applyingRemote: false,
+    saveTimer: null,
+  };
+
   let testState = {
     queue: [],
     current: 0,
     results: [],
   };
 
-  function save() {
+  function saveLocal() {
     localStorage.setItem('fc_state', JSON.stringify({ decks: state.decks }));
+  }
+
+  function save() {
+    saveLocal();
+    queueCloudSave();
   }
 
   function load() {
@@ -677,6 +702,86 @@
     } catch (e) {
       state.decks = [];
     }
+  }
+
+  function isFirebaseConfigured() {
+    return firebaseConfig.apiKey &&
+      firebaseConfig.projectId &&
+      firebaseConfig.appId &&
+      !firebaseConfig.apiKey.includes('YOUR_') &&
+      !firebaseConfig.projectId.includes('YOUR_') &&
+      !firebaseConfig.appId.includes('YOUR_');
+  }
+
+  function queueCloudSave() {
+    if (!cloudSync.enabled || cloudSync.applyingRemote) return;
+    clearTimeout(cloudSync.saveTimer);
+    cloudSync.saveTimer = setTimeout(pushStateToCloud, 250);
+  }
+
+  async function pushStateToCloud() {
+    if (!cloudSync.enabled || !cloudSync.docRef) return;
+    try {
+      await cloudSync.docRef.set({
+        decks: state.decks,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (err) {
+      console.error('Cloud sync save failed:', err);
+    }
+  }
+
+  async function initCloudSync() {
+    if (!isFirebaseConfigured()) {
+      console.warn('Firebase config not set. Cloud sync is disabled until you add your Firebase project values.');
+      return;
+    }
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    cloudSync.db = firebase.firestore();
+    cloudSync.docRef = cloudSync.db.collection('sharedFlashcards').doc('ocs-team');
+    cloudSync.enabled = true;
+
+    cloudSync.unsubscribe = cloudSync.docRef.onSnapshot(async (snapshot) => {
+      try {
+        if (!snapshot.exists) {
+          await pushStateToCloud();
+          return;
+        }
+
+        const remote = snapshot.data();
+        const remoteDecks = Array.isArray(remote.decks) ? remote.decks : [];
+        const localJson = JSON.stringify(state.decks);
+        const remoteJson = JSON.stringify(remoteDecks);
+
+        if (localJson === remoteJson) return;
+
+        cloudSync.applyingRemote = true;
+        state.decks = remoteDecks;
+
+        if (!state.decks.some(deck => deck.id === state.activeDeckId)) {
+          state.activeDeckId = state.decks.length ? state.decks[0].id : null;
+        }
+
+        saveLocal();
+        renderDeckList();
+
+        if (state.activeDeckId) {
+          selectDeck(state.activeDeckId);
+        } else {
+          showNoDeckSelected();
+        }
+      } catch (err) {
+        console.error('Cloud sync listener failed:', err);
+      } finally {
+        cloudSync.applyingRemote = false;
+      }
+    }, (error) => {
+      console.error('Cloud sync subscription failed:', error);
+    });
   }
 
   function exportDecks() {
@@ -1157,6 +1262,7 @@
 
   load();
   renderDeckList();
+  initCloudSync();
 
   if (state.decks.length === 0) {
     state.decks.push({
